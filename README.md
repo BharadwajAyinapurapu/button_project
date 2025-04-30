@@ -115,3 +115,25 @@ Once done, all the containers are up and ready.
 Hit the URL -  
 ```http://localhost:3000```
 and the website is ready to use !
+
+There are multi-staged dockerfiles as well which reduce the size of the images.
+
+### Backend Multistaged Dockerfile - 
+- Here I used --prefix (which installs packages into a known isolated location, outside the default /usr/local)
+Hence pip installs everything in `/install` directory - `/install/lib/python3.x/site-packages/`
+
+- Now the COPY command copies only /install directory to the final image's /usr/local and excludes build tools, pip, setuptools etc which are not required in the final image
+
+### Frontend Multistaged Dockerfile -  
+- Here I copied package.json initially instead of copying the entire code, because
+  - Docker builds images in layers and caches each layer. If there's no change in a layer, Docker reuses the previous result instead of re-running it.
+  - If my code were -
+  
+    ```
+    COPY . .
+    RUN npm install
+    ```
+    Any change in ANY of the source code files, would make docker re-run npm install, which is not efficient.
+    So to avoid re-installing a lot of npm packages we copied packages.json first
+
+- `npm install` command creates /node_modules directory in the current working directory which is `/app`. So I copied /app of builder image to the /app directory of final image
